@@ -1,0 +1,230 @@
+import io
+import datetime
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+class ReportService:
+    @staticmethod
+    def generate_pdf(
+        report_title: str,
+        college_name: str,
+        filters_desc: str,
+        summary_stats: dict,
+        columns: list,
+        rows: list
+    ) -> io.BytesIO:
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            rightMargin=36,
+            leftMargin=36,
+            topMargin=36,
+            bottomMargin=36
+        )
+        
+        styles = getSampleStyleSheet()
+        
+        # Custom styles
+        header_title = ParagraphStyle(
+            'HeaderTitle',
+            parent=styles['Normal'],
+            fontName='Helvetica-Bold',
+            fontSize=18,
+            leading=22,
+            textColor=colors.HexColor('#101827')
+        )
+        sub_title = ParagraphStyle(
+            'SubTitle',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=10,
+            leading=14,
+            textColor=colors.HexColor('#13B8A6')
+        )
+        meta_style = ParagraphStyle(
+            'MetaStyle',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=9,
+            leading=12,
+            textColor=colors.HexColor('#64748B')
+        )
+        th_style = ParagraphStyle(
+            'THStyle',
+            parent=styles['Normal'],
+            fontName='Helvetica-Bold',
+            fontSize=8,
+            leading=10,
+            textColor=colors.white
+        )
+        td_style = ParagraphStyle(
+            'TDStyle',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=8,
+            leading=10,
+            textColor=colors.HexColor('#1E293B')
+        )
+
+        elements = []
+        
+        # Header banner
+        elements.append(Paragraph(college_name.upper(), header_title))
+        elements.append(Paragraph("AttendX AI – Campus Biometric Attendance & Academic Governance System", sub_title))
+        elements.append(Spacer(1, 8))
+        elements.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor('#13B8A6'), spaceBefore=2, spaceAfter=8))
+        
+        # Report Metadata
+        gen_time = datetime.datetime.now().strftime("%d %B %Y, %I:%M %p")
+        meta_text = f"<b>Report:</b> {report_title} | <b>Generated:</b> {gen_time}<br/><b>Filters:</b> {filters_desc}"
+        elements.append(Paragraph(meta_text, meta_style))
+        elements.append(Spacer(1, 10))
+
+        # Summary KPIs Box
+        if summary_stats:
+            kpi_data = [
+                [Paragraph(f"<b>{k}</b>", td_style) for k in summary_stats.keys()],
+                [Paragraph(f"<b>{str(v)}</b>", ParagraphStyle('KPIVal', parent=td_style, fontSize=11, fontName='Helvetica-Bold', textColor=colors.HexColor('#172B46'))) for v in summary_stats.values()]
+            ]
+            kpi_table = Table(kpi_data, colWidths=[540 / len(summary_stats)] * len(summary_stats))
+            kpi_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F4F7FB')),
+                ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#CBD5E1')),
+                ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            elements.append(kpi_table)
+            elements.append(Spacer(1, 14))
+
+        # Data Table
+        table_content = []
+        # Header row
+        table_content.append([Paragraph(c, th_style) for c in columns])
+        # Data rows
+        for row in rows:
+            table_content.append([Paragraph(str(cell), td_style) for cell in row])
+
+        col_w = 540 / max(1, len(columns))
+        main_table = Table(table_content, colWidths=[col_w] * len(columns))
+        main_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#172B46')),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8FAFC')]),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E8F0')),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(main_table)
+        elements.append(Spacer(1, 16))
+
+        # Footer note
+        footer_text = "<i>This document is computer-generated by AttendX AI biometric verification engine. Biometric raw vectors are cryptographically secured and not exported.</i>"
+        elements.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], fontSize=7, textColor=colors.HexColor('#94A3B8'))))
+
+        doc.build(elements)
+        buffer.seek(0)
+        return buffer
+
+    @staticmethod
+    def generate_excel(
+        report_title: str,
+        college_name: str,
+        filters_desc: str,
+        summary_stats: dict,
+        columns: list,
+        rows: list
+    ) -> io.BytesIO:
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Attendance Report"
+
+        # Styling constants
+        brand_color = "172B46"
+        teal_accent = "13B8A6"
+        font_header = Font(name="Calibri", size=14, bold=True, color="FFFFFF")
+        font_sub = Font(name="Calibri", size=10, italic=True, color="FFFFFF")
+        font_th = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+        font_td = Font(name="Calibri", size=10)
+        
+        fill_brand = PatternFill(start_color=brand_color, end_color=brand_color, fill_type="solid")
+        fill_th = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+        fill_kpi = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+        
+        thin_border = Border(
+            left=Side(style='thin', color='CBD5E1'),
+            right=Side(style='thin', color='CBD5E1'),
+            top=Side(style='thin', color='CBD5E1'),
+            bottom=Side(style='thin', color='CBD5E1')
+        )
+
+        # Title Rows
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(columns))
+        ws.cell(row=1, column=1, value=college_name).font = font_header
+        ws.cell(row=1, column=1).fill = fill_brand
+        ws.cell(row=1, column=1).alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[1].height = 28
+
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(columns))
+        ws.cell(row=2, column=1, value=f"{report_title} | Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')} | {filters_desc}").font = font_sub
+        ws.cell(row=2, column=1).fill = fill_brand
+        ws.cell(row=2, column=1).alignment = Alignment(horizontal="center", vertical="center")
+        ws.row_dimensions[2].height = 20
+
+        current_row = 4
+        # Summary KPI row
+        if summary_stats:
+            col_idx = 1
+            for k, v in summary_stats.items():
+                cell_k = ws.cell(row=current_row, column=col_idx, value=k)
+                cell_k.font = Font(name="Calibri", size=9, bold=True, color="64748B")
+                cell_k.fill = fill_kpi
+                cell_k.border = thin_border
+                
+                cell_v = ws.cell(row=current_row + 1, column=col_idx, value=str(v))
+                cell_v.font = Font(name="Calibri", size=12, bold=True, color="101827")
+                cell_v.fill = fill_kpi
+                cell_v.border = thin_border
+                col_idx += 1
+            current_row += 3
+
+        # Header Row
+        for col_idx, col_name in enumerate(columns, 1):
+            cell = ws.cell(row=current_row, column=col_idx, value=col_name)
+            cell.font = font_th
+            cell.fill = fill_th
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = thin_border
+        ws.row_dimensions[current_row].height = 24
+        current_row += 1
+
+        # Data Rows
+        for r in rows:
+            for col_idx, val in enumerate(r, 1):
+                cell = ws.cell(row=current_row, column=col_idx, value=val)
+                cell.font = font_td
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+            current_row += 1
+
+        # Adjust column widths automatically
+        for col in ws.columns:
+            max_len = max(len(str(cell.value or '')) for cell in col)
+            col_letter = openpyxl.utils.get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(12, min(36, max_len + 4))
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+report_service = ReportService()
+

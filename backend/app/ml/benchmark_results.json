@@ -1,0 +1,162 @@
+{
+  "dataset_name": "AT&T Olivetti Faces Research Dataset (40 subjects, 400 images)",
+  "evaluation_timestamp": "2026-11-10T11:25:00Z",
+  "models": {
+    "face_detector": {
+      "name": "OpenCV YuNet DNN (2023mar)",
+      "filename": "face_detection_yunet_2023mar.onnx",
+      "sha256": "8F2383E4DD3CFBB4553EA8718107FC0423210DC964F9F4280604804ED2552FA4",
+      "filesize_bytes": 232589
+    },
+    "face_recognizer": {
+      "name": "OpenCV SFace DNN (2021dec)",
+      "filename": "face_recognition_sface_2021dec.onnx",
+      "sha256": "0BA9FBFA01B5270C96627C4EF784DA859931E02F04419C829E83484087C34E79",
+      "filesize_bytes": 38696353,
+      "embedding_dimension": 128,
+      "normalized_unit_vector": true
+    }
+  },
+  "operating_threshold": 0.65,
+  "equal_error_rate_eer": 0.2012,
+  "area_under_roc_curve_auc": 0.852,
+  "at_default_operating_point": {
+    "threshold": 0.65,
+    "far": 0.7621,
+    "frr": 0.0439,
+    "accuracy": 0.4929,
+    "precision": 0.4085,
+    "recall": 0.9561,
+    "f1_score": 0.5724
+  },
+  "threshold_sweep": [
+    {
+      "threshold": 0.4,
+      "far": 0.9988,
+      "frr": 0.0011,
+      "accuracy": 0.3554,
+      "precision": 0.3551,
+      "recall": 0.9989,
+      "f1_score": 0.5239
+    },
+    {
+      "threshold": 0.45,
+      "far": 0.9954,
+      "frr": 0.0028,
+      "accuracy": 0.357,
+      "precision": 0.3554,
+      "recall": 0.9972,
+      "f1_score": 0.5241
+    },
+    {
+      "threshold": 0.5,
+      "far": 0.9844,
+      "frr": 0.0056,
+      "accuracy": 0.3631,
+      "precision": 0.3574,
+      "recall": 0.9944,
+      "f1_score": 0.5258
+    },
+    {
+      "threshold": 0.55,
+      "far": 0.9541,
+      "frr": 0.0106,
+      "accuracy": 0.3809,
+      "precision": 0.3634,
+      "recall": 0.9894,
+      "f1_score": 0.5316
+    },
+    {
+      "threshold": 0.6,
+      "far": 0.8911,
+      "frr": 0.0239,
+      "accuracy": 0.4168,
+      "precision": 0.3762,
+      "recall": 0.9761,
+      "f1_score": 0.543
+    },
+    {
+      "threshold": 0.65,
+      "far": 0.7621,
+      "frr": 0.0439,
+      "accuracy": 0.4929,
+      "precision": 0.4085,
+      "recall": 0.9561,
+      "f1_score": 0.5724
+    },
+    {
+      "threshold": 0.7,
+      "far": 0.5657,
+      "frr": 0.0861,
+      "accuracy": 0.6045,
+      "precision": 0.4707,
+      "recall": 0.9139,
+      "f1_score": 0.6213
+    },
+    {
+      "threshold": 0.75,
+      "far": 0.3364,
+      "frr": 0.15,
+      "accuracy": 0.7298,
+      "precision": 0.5817,
+      "recall": 0.85,
+      "f1_score": 0.6907
+    },
+    {
+      "threshold": 0.8,
+      "far": 0.1385,
+      "frr": 0.2639,
+      "accuracy": 0.817,
+      "precision": 0.7452,
+      "recall": 0.7361,
+      "f1_score": 0.7406
+    },
+    {
+      "threshold": 0.85,
+      "far": 0.033,
+      "frr": 0.4478,
+      "accuracy": 0.8197,
+      "precision": 0.902,
+      "recall": 0.5522,
+      "f1_score": 0.685
+    }
+  ],
+  "liveness_pad_benchmark": {
+    "attack_presentation_classification_error_rate_apcer": 0.0,
+    "bona_fide_presentation_classification_error_rate_bpcer": 1.0,
+    "average_classification_error_rate_acer": 0.5,
+    "pad_heuristics": [
+      "2D FFT High-Frequency Analysis",
+      "Laplacian Sharpness Variance",
+      "YCrCb Chrominance Modeling",
+      "Specular Reflection Check"
+    ],
+    "disclaimer": "Heuristic texture & frequency analysis. Not certified ISO/IEC 30107-3 compliant.",
+    "tested_attack_modalities": [
+      {
+        "modality": "Digital Display Replay (Moir\u00e9 Artifacts)",
+        "total_tested": 50,
+        "attacks_blocked": 50,
+        "detection_rate": "100.0%"
+      },
+      {
+        "modality": "Printed Photograph (Flattened Texture / Low Chrominance)",
+        "total_tested": 50,
+        "attacks_blocked": 50,
+        "detection_rate": "100.0%"
+      },
+      {
+        "modality": "Specular Glare / Display Reflection",
+        "total_tested": 50,
+        "attacks_blocked": 50,
+        "detection_rate": "100.0%"
+      },
+      {
+        "modality": "Severely Degraded Illumination",
+        "total_tested": 50,
+        "attacks_blocked": 50,
+        "detection_rate": "100.0%"
+      }
+    ]
+  }
+}

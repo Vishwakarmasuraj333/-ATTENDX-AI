@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: attendx_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: attendx_db
+      POSTGRES_USER: attendx_admin
+      POSTGRES_PASSWORD: attendx_secure_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U attendx_admin -d attendx_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: attendx_backend
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://attendx_admin:attendx_secure_password_2026@db:5432/attendx_db
+      - SECRET_KEY=attendx-ai-super-secret-production-grade-key-2026-msc-it
+      - BIOMETRIC_ENCRYPTION_KEY=vM7kC3vE8tG9hW4zL1xY6rP2bN5sD8fA4qJ7wE0mR3g=
+      - FACE_MATCH_THRESHOLD=0.65
+      - FACE_LIVENESS_THRESHOLD=0.70
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_models:/app/ml_weights
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: attendx_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_uploads:
+  backend_models:
+
